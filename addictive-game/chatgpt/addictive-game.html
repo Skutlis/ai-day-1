@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Addictive Clicker Game</title>
+  <style>
+    /* Basic styling */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #222;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #scoreboard {
+      font-size: 20px;
+      margin: 10px;
+    }
+    canvas {
+      background-color: #333;
+      border: 2px solid #fff;
+      display: block;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Addictive Clicker Game</h1>
+  <div id="scoreboard">
+    Score: <span id="score">0</span> &nbsp;&nbsp; Time Left: <span id="time">10.0</span>s
+  </div>
+  <canvas id="gameCanvas" width="500" height="500"></canvas>
+
+  <script>
+    // Get references to DOM elements
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+
+    // Game variables
+    let score = 0;
+    let timeLeft = 10; // starting time in seconds
+    let lastTime = 0;
+    let gameOver = false;
+
+    // Target properties
+    let target = { x: 0, y: 0, radius: 30 };
+
+    // Function to generate a new target with random position and (optionally) size
+    function generateTarget() {
+      // Optionally, make the target smaller as the score increases:
+      const minRadius = 15;
+      const maxRadius = 30;
+      // Decrease the radius gradually but never below minRadius.
+      const newRadius = Math.max(maxRadius - score * 0.5, minRadius);
+      target.radius = newRadius;
+
+      // Ensure the entire target fits within the canvas.
+      target.x = Math.random() * (canvas.width - 2 * target.radius) + target.radius;
+      target.y = Math.random() * (canvas.height - 2 * target.radius) + target.radius;
+    }
+
+    // Function to start or restart the game
+    function startGame() {
+      score = 0;
+      timeLeft = 10;
+      gameOver = false;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft.toFixed(1);
+      generateTarget();
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Main game loop using requestAnimationFrame
+    function gameLoop(timestamp) {
+      // Calculate time delta in seconds
+      const delta = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+
+      // Decrease time
+      timeLeft -= delta;
+      if (timeLeft <= 0) {
+        timeLeft = 0;
+        gameOver = true;
+      }
+      timeEl.textContent = timeLeft.toFixed(1);
+
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the target if the game is still active
+      if (!gameOver) {
+        drawTarget();
+        // Continue the game loop
+        requestAnimationFrame(gameLoop);
+      } else {
+        // Draw Game Over screen
+        drawGameOver();
+      }
+    }
+
+    // Draw the target circle
+    function drawTarget() {
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff4757";
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#fff";
+      ctx.stroke();
+    }
+
+    // Display a Game Over message
+    function drawGameOver() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#fff";
+      ctx.font = "36px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = "24px Arial";
+      ctx.fillText("Final Score: " + score, canvas.width / 2, canvas.height / 2 + 20);
+      ctx.font = "20px Arial";
+      ctx.fillText("Click anywhere to restart", canvas.width / 2, canvas.height / 2 + 60);
+    }
+
+    // Handle canvas clicks
+    canvas.addEventListener("click", function (e) {
+      // Get click coordinates relative to canvas
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      if (gameOver) {
+        // Restart the game if it's over
+        startGame();
+        return;
+      }
+
+      // Calculate distance from click to center of the target
+      const dist = Math.hypot(clickX - target.x, clickY - target.y);
+
+      // Check if the target was hit
+      if (dist <= target.radius) {
+        score++;
+        scoreEl.textContent = score;
+        // Add bonus time (you can adjust this value)
+        timeLeft += 1;
+        // Generate a new target
+        generateTarget();
+      }
+    });
+
+    // Start the game for the first time
+    startGame();
+  </script>
+</body>
+</html>

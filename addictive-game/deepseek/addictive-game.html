@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click & Grow</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #e0f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    #game {
+      margin-top: 50px;
+    }
+    #plant {
+      width: 100px;
+      height: 100px;
+      background: url('seed.png') no-repeat center center;
+      background-size: contain;
+      cursor: pointer;
+      margin: 20px auto;
+    }
+    #progress-bar {
+      width: 200px;
+      height: 20px;
+      background: #ddd;
+      margin: 20px auto;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #progress {
+      height: 100%;
+      width: 0;
+      background: #4caf50;
+    }
+      transition: width 0.3s;
+    #score, #stage {
+      font-size: 24px;
+      margin: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <h1>Click & Grow</h1>
+    <div id="plant" onclick="growPlant()"></div>
+    <div id="progress-bar">
+      <div id="progress"></div>
+    </div>
+    <div id="score">Clicks: 0</div>
+    <div id="stage">Stage: Seed</div>
+    <button onclick="upgrade()" id="upgrade-btn" disabled>Upgrade (50 clicks)</button>
+  </div>
+
+  <script>
+    let clicks = 0;
+    let stage = 0;
+    const stages = ["Seed", "Sprout", "Flower", "Tree"];
+    const plantImages = ["seed.png", "sprout.png", "flower.png", "tree.png"];
+    const upgradeCost = 50;
+
+    function growPlant() {
+      clicks++;
+      updateProgress();
+      updateScore();
+      checkUpgrade();
+    }
+
+    function updateProgress() {
+      const progress = (clicks % upgradeCost) / upgradeCost * 100;
+      document.getElementById("progress").style.width = `${progress}%`;
+    }
+
+    function updateScore() {
+      document.getElementById("score").innerText = `Clicks: ${clicks}`;
+    }
+
+    function checkUpgrade() {
+      if (clicks >= upgradeCost && clicks % upgradeCost === 0) {
+        stage++;
+        if (stage < stages.length) {
+          document.getElementById("plant").style.backgroundImage = `url('${plantImages[stage]}')`;
+          document.getElementById("stage").innerText = `Stage: ${stages[stage]}`;
+        } else {
+          alert("Congratulations! You've fully grown your plant!");
+          resetGame();
+        }
+      }
+      document.getElementById("upgrade-btn").disabled = clicks < upgradeCost;
+    }
+
+    function upgrade() {
+      if (clicks >= upgradeCost) {
+        clicks -= upgradeCost;
+        stage++;
+        if (stage < stages.length) {
+          document.getElementById("plant").style.backgroundImage = `url('${plantImages[stage]}')`;
+          document.getElementById("stage").innerText = `Stage: ${stages[stage]}`;
+        } else {
+          alert("Congratulations! You've fully grown your plant!");
+          resetGame();
+        }
+        updateScore();
+        updateProgress();
+      }
+    }
+
+    function resetGame() {
+      clicks = 0;
+      stage = 0;
+      document.getElementById("plant").style.backgroundImage = "url('seed.png')";
+      document.getElementById("stage").innerText = "Stage: Seed";
+      updateScore();
+      updateProgress();
+    }
+  </script>
+</body>
+</html>

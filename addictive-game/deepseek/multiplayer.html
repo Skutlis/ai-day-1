@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dueling Archers</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #87CEEB;
+    }
+    #game {
+      position: relative;
+      width: 800px;
+      height: 400px;
+      margin: 50px auto;
+      background: #90EE90;
+      border: 2px solid #000;
+    }
+    .archer {
+      position: absolute;
+      width: 50px;
+      height: 100px;
+      background: url('archer.png') no-repeat center center;
+      background-size: contain;
+      bottom: 0;
+    }
+    #player1 {
+      left: 50px;
+    }
+    #player2 {
+      right: 50px;
+      transform: scaleX(-1); /* Flip the archer to face left */
+    }
+    .arrow {
+      position: absolute;
+      width: 20px;
+      height: 10px;
+      background: url('arrow.png') no-repeat center center;
+      background-size: contain;
+      bottom: 50px;
+    }
+    #score {
+      text-align: center;
+      font-size: 24px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="player1" class="archer"></div>
+    <div id="player2" class="archer"></div>
+  </div>
+  <div id="score">Player 1: 0 | Player 2: 0</div>
+
+  <script>
+    const game = document.getElementById("game");
+    const player1 = document.getElementById("player1");
+    const player2 = document.getElementById("player2");
+    const scoreDisplay = document.getElementById("score");
+
+    let player1Score = 0;
+    let player2Score = 0;
+    let arrows = [];
+
+    // Player positions and movement
+    let player1Y = 0;
+    let player2Y = 0;
+    const playerSpeed = 10;
+    const jumpHeight = 100;
+    const gravity = 5;
+
+    // Keyboard event listeners
+    document.addEventListener("keydown", (e) => {
+      // Player 1 controls
+      if (e.key === "a") player1.style.left = `${Math.max(0, player1.offsetLeft - playerSpeed)}px`;
+      if (e.key === "d") player1.style.left = `${Math.min(game.offsetWidth - player1.offsetWidth, player1.offsetLeft + playerSpeed)}px`;
+      if (e.key === "w" && player1Y === 0) player1Y = jumpHeight;
+      if (e.key === "s") shootArrow(player1, 1);
+
+      // Player 2 controls
+      if (e.key === "ArrowLeft") player2.style.left = `${Math.max(0, player2.offsetLeft - playerSpeed)}px`;
+      if (e.key === "ArrowRight") player2.style.left = `${Math.min(game.offsetWidth - player2.offsetWidth, player2.offsetLeft + playerSpeed)}px`;
+      if (e.key === "ArrowUp" && player2Y === 0) player2Y = jumpHeight;
+      if (e.key === "ArrowDown") shootArrow(player2, -1);
+    });
+
+    // Arrow shooting function
+    function shootArrow(shooter, direction) {
+      const arrow = document.createElement("div");
+      arrow.classList.add("arrow");
+      arrow.style.left = `${shooter.offsetLeft + (direction === 1 ? 50 : -20)}px`;
+      game.appendChild(arrow);
+      arrows.push({ element: arrow, direction });
+
+      // Move the arrow
+      const arrowInterval = setInterval(() => {
+        arrow.style.left = `${arrow.offsetLeft + 5 * direction}px`;
+
+        // Check for collision with the other player
+        if (direction === 1 && arrow.offsetLeft >= player2.offsetLeft && arrow.offsetLeft <= player2.offsetLeft + 50 && player2Y === 0) {
+          clearInterval(arrowInterval);
+          arrow.remove();
+          player1Score++;
+          updateScore();
+          resetRound();
+        } else if (direction === -1 && arrow.offsetLeft <= player1.offsetLeft + 50 && arrow.offsetLeft >= player1.offsetLeft && player1Y === 0) {
+          clearInterval(arrowInterval);
+          arrow.remove();
+          player2Score++;
+          updateScore();
+          resetRound();
+        }
+
+        // Remove arrow if it goes off-screen
+        if (arrow.offsetLeft < 0 || arrow.offsetLeft > game.offsetWidth) {
+          clearInterval(arrowInterval);
+          arrow.remove();
+        }
+      }, 20);
+    }
+
+    // Update score display
+    function updateScore() {
+      scoreDisplay.innerText = `Player 1: ${player1Score} | Player 2: ${player2Score}`;
+    }
+
+    // Reset round
+    function resetRound() {
+      player1.style.left = "50px";
+      player2.style.left = `${game.offsetWidth - 100}px`;
+      arrows.forEach(arrow => arrow.element.remove());
+      arrows = [];
+    }
+
+    // Gravity for jumping
+    setInterval(() => {
+      if (player1Y > 0) {
+        player1Y -= gravity;
+        player1.style.bottom = `${player1Y}px`;
+      }
+      if (player2Y > 0) {
+        player2Y -= gravity;
+        player2.style.bottom = `${player2Y}px`;
+      }
+    }, 20);
+  </script>
+</body>
+</html>
